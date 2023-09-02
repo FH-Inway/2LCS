@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LCS.JsonObjects
 {
@@ -70,7 +71,7 @@ namespace LCS.JsonObjects
         public string CurrentPlatformReleaseName { get; set; }
         public string CurrentPlatformVersion { get; set; }
         public string DeployedBy { get; set; }
-        public string DeployedOn { get; set; }//Todo
+        public DateTime DeployedOn { get; set; }//Todo
         public string DeploymentAction { get; set; }
         public int DeploymentErrorCode { get; set; }
         public string DeploymentId { get; set; }

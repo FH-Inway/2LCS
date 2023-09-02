@@ -1059,7 +1059,7 @@ namespace LCS.Forms
                         instanceDetailsTable.Rows[2].Cells[0].Paragraphs[0].Append("Topology");
                         instanceDetailsTable.Rows[2].Cells[1].Paragraphs[0].Append(saasInstance.TopologyDisplayName);
                         instanceDetailsTable.Rows[3].Cells[0].Paragraphs[0].Append("Deployed on");
-                        instanceDetailsTable.Rows[3].Cells[1].Paragraphs[0].Append(saasInstance.DeployedOn); //Todo ?.ToString("yyyy-MM-dd H:mm"));
+                        instanceDetailsTable.Rows[3].Cells[1].Paragraphs[0].Append(saasInstance.DeployedOn.ToString("yyyy-MM-dd H:mm"));
                         instanceDetailsTable.Rows[4].Cells[0].Paragraphs[0].Append("Deployed by");
                         instanceDetailsTable.Rows[4].Cells[1].Paragraphs[0].Append(saasInstance.DeployedBy);
                         instanceDetailsTable.Rows[5].Cells[0].Paragraphs[0].Append("Environment admin");
@@ -1183,7 +1183,7 @@ namespace LCS.Forms
                         instanceDetailsTable.Rows[2].Cells[0].Paragraphs[0].Append("Topology");
                         instanceDetailsTable.Rows[2].Cells[1].Paragraphs[0].Append(instance.TopologyDisplayName);
                         instanceDetailsTable.Rows[3].Cells[0].Paragraphs[0].Append("Deployed on");
-                        instanceDetailsTable.Rows[3].Cells[1].Paragraphs[0].Append(instance.DeployedOn); //Todo ?.ToString("yyyy-MM-dd H:mm"));
+                        instanceDetailsTable.Rows[3].Cells[1].Paragraphs[0].Append(instance.DeployedOn.ToString("yyyy-MM-dd H:mm"));
                         instanceDetailsTable.Rows[4].Cells[0].Paragraphs[0].Append("Deployed by");
                         instanceDetailsTable.Rows[4].Cells[1].Paragraphs[0].Append(instance.DeployedBy);
                         instanceDetailsTable.Rows[5].Cells[0].Paragraphs[0].Append("Environment admin");
