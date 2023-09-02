@@ -214,34 +214,39 @@ namespace LCS.Forms
             if (!form.Cancelled && (form.LcsProject != null))
             {
                 Projects = form.Projects;
-                if (_selectedProject == null || form.LcsProject.Id != _selectedProject.Id)
-                {
-                    _cheInstancesSource.DataSource = null;
-                    _cheInstancesSource.ResetBindings(false);
-                    _saasInstancesSource.DataSource = null;
-                    _saasInstancesSource.ResetBindings(false);
-                    _selectedProject = form.LcsProject;
-
-                    if (!Instances.Exists(x => x.LcsProjectId == _selectedProject.Id))
-                    {
-                        var instance = new ProjectInstance()
-                        {
-                            LcsProjectId = _selectedProject.Id,
-                        };
-                        Instances.Add(instance);
-                    }
-                }
-                refreshMenuItem.Enabled = true;
-                exportToolStripMenuItem.Enabled = true;
-                _httpClientHelper.ChangeLcsProjectId(_selectedProject.Id.ToString());
-                _httpClientHelper.LcsProjectTypeId = _selectedProject.ProjectTypeId;
-                _cookies = _httpClientHelper.CookieContainer;
-                GetLcsProjectFromCookie();
-                SetLcsProjectText();
-                CreateProjectLinksMenuItems();
-                EnableDisableMenuItems();
-                await RefreshEnvironmentsAsync(Properties.Settings.Default.autorefresh);
+                await ChangeProject(form.LcsProject);
             }
+        }
+
+        private async Task ChangeProject(LcsProject newLcsProject)
+        {
+            if (_selectedProject == null || newLcsProject.Id != _selectedProject.Id)
+            {
+                _cheInstancesSource.DataSource = null;
+                _cheInstancesSource.ResetBindings(false);
+                _saasInstancesSource.DataSource = null;
+                _saasInstancesSource.ResetBindings(false);
+                _selectedProject = newLcsProject;
+
+                if (!Instances.Exists(x => x.LcsProjectId == _selectedProject.Id))
+                {
+                    var instance = new ProjectInstance()
+                    {
+                        LcsProjectId = _selectedProject.Id,
+                    };
+                    Instances.Add(instance);
+                }
+            }
+            refreshMenuItem.Enabled = true;
+            exportToolStripMenuItem.Enabled = true;
+            _httpClientHelper.ChangeLcsProjectId(_selectedProject.Id.ToString());
+            _httpClientHelper.LcsProjectTypeId = _selectedProject.ProjectTypeId;
+            _cookies = _httpClientHelper.CookieContainer;
+            GetLcsProjectFromCookie();
+            SetLcsProjectText();
+            CreateProjectLinksMenuItems();
+            EnableDisableMenuItems();
+            await RefreshEnvironmentsAsync(Properties.Settings.Default.autorefresh);
         }
 
         private void CheDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -727,10 +732,10 @@ namespace LCS.Forms
             notifyIcon.BalloonTipTitle = $"Exporting list of Environment Updates";
 
             notifyIcon.ShowBalloonTip(2000); //This setting might be overruled by the OS
-                       
+
             var previousProject = _selectedProject;
             var exportedActionDetailList = new List<ActionDetails>();
-           
+
             _httpClientHelper.ChangeLcsProjectId(_selectedProject.Id.ToString());
             _httpClientHelper.LcsProjectTypeId = _selectedProject.ProjectTypeId;
             await RefreshEnvironmentsAsync();
@@ -749,8 +754,8 @@ namespace LCS.Forms
                                 exportedActionDetailList.Add(_action);
                             }
                         }
-                    }                
-            }
+                    }
+                }
             if (_LCSEnvironments == LCSEnvironments.ALL || _LCSEnvironments == LCSEnvironments.CHE)
                 if (_cheInstancesList != null && _cheInstancesList.Count > 0)
                 {
@@ -766,7 +771,7 @@ namespace LCS.Forms
                             }
                         }
                     }
-            }
+                }
 
             SaveFileDialog savefile = new SaveFileDialog
             {
@@ -1109,11 +1114,11 @@ namespace LCS.Forms
                                     rdpTable.Rows[2].Cells[1].Paragraphs[0].Append(rdpEntry.Domain + "\\" + rdpEntry.Username);
                                     rdpTable.Rows[3].Cells[0].Paragraphs[0].Append("Password");
                                     rdpTable.Rows[3].Cells[1].Paragraphs[0].Append(rdpEntry.Password);
-                        
-                                document.InsertTable(rdpTable);
-                                document.InsertParagraph();
+
+                                    document.InsertTable(rdpTable);
+                                    document.InsertParagraph();
+                                }
                             }
-                        }
                         }
                         foreach (var vm in saasInstance.Instances)
                         {
@@ -1226,8 +1231,8 @@ namespace LCS.Forms
                                     rdpTable.Rows[0].Cells[0].Paragraphs[0].Append("RDP address");
                                     rdpTable.Rows[0].Cells[1].Paragraphs[0].Append(rdpEntry.Address + ":" + rdpEntry.Port);
                                     rdpTable.Rows[1].Cells[0].Paragraphs[0].Append("User name");
-                                    rdpTable.Rows[1].Cells[1].Paragraphs[0].Append(rdpEntry.Domain + "\\" + rdpEntry.Username);                             
-                                    rdpTable.Rows[2].Cells[0].Paragraphs[0].Append("Password");                            
+                                    rdpTable.Rows[1].Cells[1].Paragraphs[0].Append(rdpEntry.Domain + "\\" + rdpEntry.Username);
+                                    rdpTable.Rows[2].Cells[0].Paragraphs[0].Append("Password");
                                     rdpTable.Rows[2].Cells[1].Paragraphs[0].Append(rdpEntry.Password);
 
                                     document.InsertTable(rdpTable);
@@ -1339,7 +1344,7 @@ namespace LCS.Forms
                 if (projectUsers != null && projectUsers.Count > 0)
                 {
                     foreach (var user in projectUsers)
-                    {                    
+                    {
                         var exportedUser = new ExportedUser
                         {
                             ProjectId = _project.Id.ToString(),
@@ -1558,6 +1563,8 @@ namespace LCS.Forms
                         new List<ProjectInstance>();
             Projects = JsonConvert.DeserializeObject<List<LcsProject>>(Properties.Settings.Default.projects) ?? new List<LcsProject>();
 
+            UpdateContextTree();
+
             if (!string.IsNullOrEmpty(Properties.Settings.Default.cookie))
             {
                 _cookies = new CookieContainer();
@@ -1608,9 +1615,38 @@ namespace LCS.Forms
             LoadFromCredentialsStore();
         }
 
+        private void UpdateContextTree()
+        {
+            TreeNode[] geoProjectNodes = new TreeNode[Projects.Count];
+            for (int i = 0; i < Projects.Count; i++)
+            {
+                var projectInstances = Instances.Where(x => x.LcsProjectId.Equals(Projects[i].Id));
+                var numberOfCHEEnvironments = projectInstances.SingleOrDefault()?.CheInstances?.Count;
+                var numberOfSaasEnvironments = projectInstances.SingleOrDefault()?.SaasInstances?.Count;
+                // create a string showing the number of environments for each project if they are not null
+                var numberOfEnvironments = numberOfCHEEnvironments.HasValue || numberOfSaasEnvironments.HasValue ? $" (☁️{numberOfCHEEnvironments}/🪟{numberOfSaasEnvironments})" : "";
+                geoProjectNodes[i] = new TreeNode($"{Projects[i].Name}{numberOfEnvironments}");
+                geoProjectNodes[i].Tag = Projects[i];
+            }
+            TreeNode usGlobalNode = new TreeNode("United States", geoProjectNodes);
+            contextTree.Nodes.Add(usGlobalNode);
+            TreeNode euNode = new TreeNode("Europe");
+            contextTree.Nodes.Add(euNode);
+            TreeNode frNode = new TreeNode("France");
+            contextTree.Nodes.Add(frNode);
+            TreeNode saNode = new TreeNode("South Africe");
+            contextTree.Nodes.Add(saNode);
+            TreeNode uaeNode = new TreeNode("United Arab Emirates");
+            contextTree.Nodes.Add(uaeNode);
+            TreeNode chNode = new TreeNode("Switzerland");
+            contextTree.Nodes.Add(chNode);
+            TreeNode noNode = new TreeNode("Norway");
+            contextTree.Nodes.Add(noNode);
+        }
+
         private void LoadFromCredentialsStore()
         {
-            if(CacheUtil.SaveCacheToStoreEnabled())
+            if (CacheUtil.SaveCacheToStoreEnabled())
             {
                 CredentialsCacheHelper.LoadOffLineCredentials();
             }
@@ -1623,7 +1659,7 @@ namespace LCS.Forms
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(CacheUtil.SaveCacheToStoreEnabled())
+            if (CacheUtil.SaveCacheToStoreEnabled())
             {
                 CredentialsCacheHelper.SaveCredentialsOffline();
             }
@@ -1697,7 +1733,7 @@ namespace LCS.Forms
                     MessageBox.Show($"Cannot retrieve RDP connection details. This instance is not accessible through RDP or you do not have access to see those details. Check if you have Environment Manager role.");
                     return;
                 }
-                else if(rdpList.Count > 1)
+                else if (rdpList.Count > 1)
                 {
                     rdpEntry = ChooseRdpLogonUser(rdpList);
                 }
@@ -2416,7 +2452,7 @@ namespace LCS.Forms
 
             await RefreshEnvironmentsAsync(false);
         }
-        
+
         private void CloudHostedInstancesExportToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ExportListOfInstancesForAllProjects(LCSEnvironments.CHE, LCSProjectAllCurrent.ALL);
@@ -2510,7 +2546,7 @@ namespace LCS.Forms
             }
             Cursor = Cursors.Default;
         }
-            
+
         private void allProjectsTSMExportAllInstances_Click(object sender, EventArgs e)
         {
             ExportListOfInstancesForAllProjects(LCSEnvironments.ALL, LCSProjectAllCurrent.ALL);
@@ -2545,6 +2581,16 @@ namespace LCS.Forms
         private async void allProjectUsersExportMenuItem_Click(object sender, EventArgs e)
         {
             await ExportListOfUsers(LCSProjectAllCurrent.ALL);
+        }
+
+        private async void contextTree_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            TreeNode selectedNode = contextTree.SelectedNode;
+            if (selectedNode == null) return;
+            if (selectedNode.Tag is LcsProject)
+            {
+                await ChangeProject(selectedNode.Tag as LcsProject);
+            }
         }
     }
 
