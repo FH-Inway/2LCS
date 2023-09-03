@@ -250,5 +250,62 @@ namespace LCS.Properties {
                 this["lcsFixURL"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"{
+  ""United States"": {
+    ""Type"": 0,
+    ""Name"": ""United States"",
+    ""LcsUrl"": ""https://lcs.dynamics.com"",
+    ""LcsDiagUrl"": ""https://diag.lcs.dynamics.com"",
+    ""LcsUpdateUrl"": ""https://update.lcs.dynamics.com"",
+    ""LcsFixUrl"": ""https://fix.lcs.dynamics.com""
+  },
+  ""Europe"": {
+    ""Type"": 1,
+    ""Name"": ""Europe"",
+    ""LcsUrl"": ""https://eu.lcs.dynamics.com"",
+    ""LcsDiagUrl"": ""https://eu.diag.lcs.dynamics.com"",
+    ""LcsUpdateUrl"": ""https://eu.update.lcs.dynamics.com"",
+    ""LcsFixUrl"": ""https://eu.fix.lcs.dynamics.com""
+  },
+  ""France"": {
+    ""Type"": 1,
+    ""Name"": ""France"",
+    ""LcsUrl"": ""https://fr.lcs.dynamics.com"",
+    ""LcsDiagUrl"": ""https://fr.diag.lcs.dynamics.com"",
+    ""LcsUpdateUrl"": ""https://fr.update.lcs.dynamics.com"",
+    ""LcsFixUrl"": ""https://fr.fix.lcs.dynamics.com""
+  },
+  ""South Africa"": {
+    ""Type"": 1,
+    ""Name"": ""South Africa"",
+    ""LcsUrl"": ""https://sa.lcs.dynamics.com"",
+    ""LcsDiagUrl"": ""https://sa.diag.lcs.dynamics.com"",
+    ""LcsUpdateUrl"": ""https://sa.update.lcs.dynamics.com"",
+    ""LcsFixUrl"": ""https://sa.fix.lcs.dynamics.com""
+  }
+}")]
+        public string lcsGeos {
+            get {
+                return ((string)(this["lcsGeos"]));
+            }
+            set {
+                this["lcsGeos"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string currentLcsGeo {
+            get {
+                return ((string)(this["currentLcsGeo"]));
+            }
+            set {
+                this["currentLcsGeo"] = value;
+            }
+        }
     }
 }

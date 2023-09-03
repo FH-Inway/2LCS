@@ -1,16 +1,8 @@
-﻿using LCS.Forms;
-using LCS.JsonObjects;
+﻿using LCS.Model;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Windows.Forms;
 
 namespace LCS
@@ -19,10 +11,10 @@ namespace LCS
     {
         public const string URI_PROTOCOL_NAME = "MS-2LCS";
 
-        public static string LCS_DIAG_URL = Properties.Settings.Default.lcsDiagURL;
-        public static string LCS_UPDATE_URL = Properties.Settings.Default.lcsUpdateURL;
-        public static string LCS_URL = Properties.Settings.Default.lcsURL;
-        public static string LCS_FIX_URL = Properties.Settings.Default.lcsFixURL;
+        public static string LCS_DIAG_URL = LcsContext.CurrentLcsGeo.LcsDiagUrl.ToString();
+        public static string LCS_UPDATE_URL = LcsContext.CurrentLcsGeo.LcsUpdateUrl.ToString();
+        public static string LCS_URL = LcsContext.CurrentLcsGeo.LcsUrl.ToString();
+        public static string LCS_FIX_URL = LcsContext.CurrentLcsGeo.LcsFixUrl.ToString();
 
         public static bool DetectURILaunch(string[] args)
         {
@@ -32,7 +24,7 @@ namespace LCS
             {
                 if (Uri.TryCreate(arg, UriKind.RelativeOrAbsolute, out Uri srcUri))
                 {
-                    Uri  uri = srcUri.IsAbsoluteUri ?  srcUri : new Uri(new Uri("ms-2lcs://lcs.dynamics.com/"), arg);
+                    Uri uri = srcUri.IsAbsoluteUri ? srcUri : new Uri(new Uri("ms-2lcs://lcs.dynamics.com/"), arg);
                     retVal = retVal || uri.Scheme == URI_PROTOCOL_NAME.ToLower();
                     if (retVal) break;
                 }
@@ -45,9 +37,9 @@ namespace LCS
         {
             bool retVal = false;
             if (IsAdministratorAccessProvided())
-            { 
-                Registry.ClassesRoot.DeleteSubKeyTree(URI_PROTOCOL_NAME, false);            
-                
+            {
+                Registry.ClassesRoot.DeleteSubKeyTree(URI_PROTOCOL_NAME, false);
+
                 MessageBox.Show($"{URI_PROTOCOL_NAME} protocol handler registration removed.");
                 retVal = true;
             }
@@ -62,10 +54,10 @@ namespace LCS
             retVal = retVal && RemoveHandler();
 
             if (retVal)
-            { 
+            {
                 RegistryKey rootKey = Registry.ClassesRoot.CreateSubKey(URI_PROTOCOL_NAME.ToLower());
 
-                if (rootKey  != null)
+                if (rootKey != null)
                 {
                     string appAssemblyLocation = Assembly.GetExecutingAssembly().Location;
 
@@ -84,12 +76,12 @@ namespace LCS
                 MessageBox.Show($"{URI_PROTOCOL_NAME} protocol  handler registration completed.\nRemember to not move the executable to other location or re-register it after.");
                 retVal = true;
             }
-            return  retVal;
+            return retVal;
         }
 
         private static bool IsAdministratorAccessProvided()
         {
-             bool isAdmin = CheckIsUserAdministrator();
+            bool isAdmin = CheckIsUserAdministrator();
 
             if (!isAdmin)
             {

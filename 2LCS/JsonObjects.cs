@@ -313,6 +313,7 @@ namespace LCS.JsonObjects
         public string SharepointSite { get; set; }
         public string TfsProjectName { get; set; }
         public string TfsServerSite { get; set; }
+        public string LcsGeoName { get; set; }
     }
 
     public class Navigationlink

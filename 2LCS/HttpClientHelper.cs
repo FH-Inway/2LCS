@@ -116,7 +116,7 @@ namespace LCS
         internal async Task<bool> AddNsgRule(CloudHostedInstance instance, string ruleName, string ipOrCidr)
         {
             string parameters, url;
-            if(GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
+            if (GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
             {
                 parameters = $"lcsEnvironmentId={instance.EnvironmentId}&newRuleName={ruleName}&newRuleIpOrCidr={ipOrCidr}&newRuleService=AzureSQL";
                 url = $"{LcsUrl}/EnvironmentServicingV2/SFAddNetworkSecurityRule/{LcsProjectId}";
@@ -186,7 +186,7 @@ namespace LCS
         internal async Task<string> DeleteNsgRule(CloudHostedInstance instance, string rule)
         {
             string url;
-            if(GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
+            if (GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
             {
                 url = $"{LcsUrl}/EnvironmentServicingV2/SFDeleteNetworkSecurityRules/{LcsProjectId}";
             }
@@ -243,6 +243,11 @@ namespace LCS
                     if (response.Success && response.Data != null)
                     {
                         var projects = JsonConvert.DeserializeObject<ProjectsData>(response.Data.ToString()).Results;
+                        // set geo name of all projects
+                        foreach (var project in projects)
+                        {
+                            project.LcsGeoName = LcsContext.CurrentLcsGeo.Name;
+                        }
                         numberOfProjectReturned = projects.Count;
                         allProjects.AddRange(projects);
                     }
@@ -462,7 +467,7 @@ namespace LCS
             try
             {
                 string url;
-                if(GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
+                if (GetDeploymentEnvironmentTypeInfo(instance.EnvironmentId) == DeploymentEnvironmentType.MicrosoftManagedServiceFabric)
                 {
                     url = $"{LcsUrl}/EnvironmentServicingV2/SFGetNetworkSecurityGroup/{LcsProjectId}?lcsEnvironmentId={instance.EnvironmentId}&_={DateTimeOffset.Now.ToUnixTimeSeconds()}";
                 }
@@ -470,7 +475,7 @@ namespace LCS
                 {
                     url = $"{LcsUrl}/Environment/GetNetworkSecurityGroup/{LcsProjectId}?lcsEnvironmentId={instance.EnvironmentId}&_={DateTimeOffset.Now.ToUnixTimeSeconds()}";
                 }
-                
+
                 var result = _httpClient.GetAsync(url).Result;
                 result.EnsureSuccessStatusCode();
                 var responseBody = result.Content.ReadAsStringAsync().Result;
@@ -673,7 +678,7 @@ namespace LCS
                 if (instances == null) return list;
 
                 instances = instances.OrderBy(x => x.DisplayOrder).ToList();//Sort according to display order
-                
+
                 foreach (var item in instances)
                 {
                     foreach (var instance in item.DeploymentInstances)

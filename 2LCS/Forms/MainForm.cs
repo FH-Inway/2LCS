@@ -20,6 +20,7 @@ using Xceed.Document.NET;
 using Xceed.Words.NET;
 using static LCS.NativeMethods;
 using System.Globalization;
+using LCS.Model;
 
 namespace LCS.Forms
 {
@@ -1559,9 +1560,18 @@ namespace LCS.Forms
         {
             SetInitialGridSettings();
 
-            Instances = JsonConvert.DeserializeObject<List<ProjectInstance>>(Properties.Settings.Default.instances) ??
-                        new List<ProjectInstance>();
-            Projects = JsonConvert.DeserializeObject<List<LcsProject>>(Properties.Settings.Default.projects) ?? new List<LcsProject>();
+            LcsContext.LcsGeos = JsonConvert.DeserializeObject<Dictionary<string, LcsGeo>>(
+                Properties.Settings.Default.lcsGeos) ??
+                new Dictionary<string, LcsGeo>();
+            LcsContext.CurrentLcsGeo = JsonConvert.DeserializeObject<LcsGeo>(
+                Properties.Settings.Default.currentLcsGeo) ??
+                LcsContext.LcsGeos.GetValueOrDefault("United States");
+            Projects = JsonConvert.DeserializeObject<List<LcsProject>>(
+                Properties.Settings.Default.projects) ??
+                new List<LcsProject>();
+            Instances = JsonConvert.DeserializeObject<List<ProjectInstance>>(
+                Properties.Settings.Default.instances) ??
+                new List<ProjectInstance>();
 
             UpdateContextTree();
 
@@ -1617,31 +1627,49 @@ namespace LCS.Forms
 
         private void UpdateContextTree()
         {
-            TreeNode[] geoProjectNodes = new TreeNode[Projects.Count];
-            for (int i = 0; i < Projects.Count; i++)
+            contextTree.Nodes.Clear();
+            List<TreeNode> geoTypeNodes = new List<TreeNode>();
+            foreach (LcsGeoType geoType in Enum.GetValues(typeof(LcsGeoType)))
             {
-                var projectInstances = Instances.Where(x => x.LcsProjectId.Equals(Projects[i].Id));
-                var numberOfCHEEnvironments = projectInstances.SingleOrDefault()?.CheInstances?.Count;
-                var numberOfSaasEnvironments = projectInstances.SingleOrDefault()?.SaasInstances?.Count;
-                // create a string showing the number of environments for each project if they are not null
-                var numberOfEnvironments = numberOfCHEEnvironments.HasValue || numberOfSaasEnvironments.HasValue ? $" (☁️{numberOfCHEEnvironments}/🪟{numberOfSaasEnvironments})" : "";
-                geoProjectNodes[i] = new TreeNode($"{Projects[i].Name}{numberOfEnvironments}");
-                geoProjectNodes[i].Tag = Projects[i];
+                var lcsGeos = LcsContext.LcsGeos.Where(x => x.Value.Type == geoType);
+                List<TreeNode> geoNodes = new List<TreeNode>();
+                foreach (var lcsGeo in lcsGeos)
+                {
+                    var geoProjects = Projects.Where(x => x.LcsGeoName.Equals(lcsGeo.Value.Name));
+                    List<TreeNode> geoProjectNodes = new List<TreeNode>();
+                    foreach (var project in geoProjects)
+                    {
+                        var projectInstances = Instances.Where(x => x.LcsProjectId.Equals(project.Id));
+                        var numberOfCHEEnvironments = projectInstances.SingleOrDefault()?.CheInstances?.Count;
+                        var numberOfSaasEnvironments = projectInstances.SingleOrDefault()?.SaasInstances?.Count;
+                        // create a string showing the number of environments for each project if they are not null
+                        var numberOfEnvironments = 
+                            (numberOfCHEEnvironments.HasValue && numberOfCHEEnvironments > 0)
+                                || (numberOfSaasEnvironments.HasValue && numberOfSaasEnvironments > 0)
+                            ? $" (☁️{numberOfCHEEnvironments}/🪟{numberOfSaasEnvironments})" 
+                            : "";
+                        var projectNode = new TreeNode($"{project.Name}{numberOfEnvironments}")
+                        {
+                            Tag = project
+                        };
+                        geoProjectNodes.Add(projectNode);
+                    }
+                    var numberOfProjects = geoProjects.Count();
+                    // create a string showing the number of projects for each geo if they are not null
+                    var numberOfProjectsString = numberOfProjects > 0 ? $" ({numberOfProjects})" : "";
+                    var geoNode = new TreeNode($"{lcsGeo.Value.Name}{numberOfProjectsString}", geoProjectNodes.ToArray())
+                    {
+                        Tag = lcsGeo.Value,
+                    };
+                    geoNodes.Add(geoNode);
+                }
+                var geoTypeNode = new TreeNode(geoType.EnumDescription(), geoNodes.ToArray())
+                {
+                    Tag = geoType
+                };
+                geoTypeNodes.Add(geoTypeNode);
             }
-            TreeNode usGlobalNode = new TreeNode("United States", geoProjectNodes);
-            contextTree.Nodes.Add(usGlobalNode);
-            TreeNode euNode = new TreeNode("Europe");
-            contextTree.Nodes.Add(euNode);
-            TreeNode frNode = new TreeNode("France");
-            contextTree.Nodes.Add(frNode);
-            TreeNode saNode = new TreeNode("South Africe");
-            contextTree.Nodes.Add(saNode);
-            TreeNode uaeNode = new TreeNode("United Arab Emirates");
-            contextTree.Nodes.Add(uaeNode);
-            TreeNode chNode = new TreeNode("Switzerland");
-            contextTree.Nodes.Add(chNode);
-            TreeNode noNode = new TreeNode("Norway");
-            contextTree.Nodes.Add(noNode);
+            contextTree.Nodes.AddRange(geoTypeNodes.ToArray());
         }
 
         private void LoadFromCredentialsStore()
@@ -2587,10 +2615,23 @@ namespace LCS.Forms
         {
             TreeNode selectedNode = contextTree.SelectedNode;
             if (selectedNode == null) return;
-            if (selectedNode.Tag is LcsProject)
+            switch (selectedNode.Tag)
             {
-                await ChangeProject(selectedNode.Tag as LcsProject);
+                case LcsProject project:
+                    await ChangeProject(project);
+                    break;
+                case LcsGeo geo:
+                    ChangeGeo(geo);
+                    break;
             }
+        }
+
+        private void ChangeGeo(LcsGeo geo)
+        {
+            Properties.Settings.Default.currentLcsGeo = JsonConvert.SerializeObject(geo);
+            Properties.Settings.Default.cookie = "";
+            Properties.Settings.Default.Save();
+            Application.Restart();
         }
     }
 

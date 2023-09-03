@@ -1075,7 +1075,7 @@
             cheTabPage.Padding = new System.Windows.Forms.Padding(3);
             cheTabPage.Size = new System.Drawing.Size(958, 756);
             cheTabPage.TabIndex = 0;
-            cheTabPage.Text = "Cloud-hosted instances";
+            cheTabPage.Text = "☁️Cloud-hosted instances";
             cheTabPage.UseVisualStyleBackColor = true;
             // 
             // cheDataGridView
@@ -1240,7 +1240,7 @@
             saasTabPage.Padding = new System.Windows.Forms.Padding(3);
             saasTabPage.Size = new System.Drawing.Size(958, 756);
             saasTabPage.TabIndex = 1;
-            saasTabPage.Text = "MS-hosted environments";
+            saasTabPage.Text = "\U0001fa9fMS-hosted environments";
             saasTabPage.UseVisualStyleBackColor = true;
             // 
             // saasDataGridView

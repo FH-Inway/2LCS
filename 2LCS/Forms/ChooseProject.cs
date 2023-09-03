@@ -54,7 +54,9 @@ namespace LCS.Forms
             Projects = JsonConvert.DeserializeObject<List<LcsProject>>(Properties.Settings.Default.projects);
             if (Projects != null)
             {
-                _projectsSource.DataSource = Projects.OrderBy(f => f.Favorite).ThenBy(i => i.Id).Reverse();
+                _projectsSource.DataSource = Projects
+                    .Where(p => p.LcsGeoName == LcsContext.CurrentLcsGeo.Name)
+                    .OrderBy(f => f.Favorite).ThenBy(i => i.Id).Reverse();
             }
         }
 
@@ -120,14 +122,26 @@ namespace LCS.Forms
             {
                 favoritesSaved = Projects.Where(x => x.Favorite == true).ToList();
             }
-            Projects = await HttpClientHelper.GetAllProjectsAsync();
+            var currentGeoProjects = await HttpClientHelper.GetAllProjectsAsync();
+            // replace existing projects of current geo with new ones
+            if (Projects == null)
+            {
+                Projects = currentGeoProjects;
+            }
+            else
+            {
+                Projects.RemoveAll(p => p.LcsGeoName == LcsContext.CurrentLcsGeo.Name);
+                Projects.AddRange(currentGeoProjects);
+            }
             foreach (var savedProject in favoritesSaved)
             {
                 Projects.Where(newProject => newProject.Id == savedProject.Id)
                     .Select(newProject => { newProject.Favorite = true; return newProject; })
                         .ToList();
             }
-            _projectsSource.DataSource = Projects.OrderBy(f => f.Favorite).ThenBy(i => i.Id).Reverse();
+            _projectsSource.DataSource = Projects
+                .Where(p => p.LcsGeoName == LcsContext.CurrentLcsGeo.Name)
+                .OrderBy(f => f.Favorite).ThenBy(i => i.Id).Reverse();
             _projectsSource.ResetBindings(false);
         }
 
