@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CsvHelper;
 using LCS.JsonObjects;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -37,7 +38,7 @@ public partial class AssetLibrarySearch : Form
         var assetVersionsForExportList = new List<AssetVersionForExport>();
 
         var config = new MapperConfiguration(
-            cfg => cfg.CreateMap<AssetVersion, AssetVersionForExport>());
+            cfg => cfg.CreateMap<AssetVersion, AssetVersionForExport>(), NullLoggerFactory.Instance);
         var mapper = config.CreateMapper();
 
         // linear with progress, only assets in date range
